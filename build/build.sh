@@ -8,12 +8,12 @@
 
 BUILD_DATE="$(date -u +'%Y-%m-%d')"
 
-SHOULD_BUILD_BASE="$(grep -m 1 build_base build.yml | grep -o -P '(?<=").*(?=")')"
-SHOULD_BUILD_SPARK="$(grep -m 1 build_spark build.yml | grep -o -P '(?<=").*(?=")')"
-SHOULD_BUILD_JUPYTERLAB="$(grep -m 1 build_jupyter build.yml | grep -o -P '(?<=").*(?=")')"
+SHOULD_BUILD_BASE="$(ggrep -m 1 build_base build.yml | ggrep -o -P '(?<=").*(?=")')"
+SHOULD_BUILD_SPARK="$(ggrep -m 1 build_spark build.yml | ggrep -o -P '(?<=").*(?=")')"
+SHOULD_BUILD_JUPYTERLAB="$(ggrep -m 1 build_jupyter build.yml | ggrep -o -P '(?<=").*(?=")')"
 
-SPARK_VERSION="$(grep -m 1 spark build.yml | grep -o -P '(?<=").*(?=")')"
-JUPYTERLAB_VERSION="$(grep -m 1 jupyterlab build.yml | grep -o -P '(?<=").*(?=")')"
+SPARK_VERSION="$(ggrep -m 1 spark build.yml | ggrep -o -P '(?<=").*(?=")')"
+JUPYTERLAB_VERSION="$(ggrep -m 1 jupyterlab build.yml | ggrep -o -P '(?<=").*(?=")')"
 
 SPARK_VERSION_MAJOR=${SPARK_VERSION:0:1}
 
@@ -37,27 +37,27 @@ fi
 
 function cleanContainers() {
 
-    container="$(docker ps -a | grep 'jupyterlab' | awk '{print $1}')"
+    container="$(docker ps -a | ggrep 'jupyterlab' | awk '{print $1}')"
     docker stop "${container}"
     docker rm "${container}"
 
-    container="$(docker ps -a | grep 'spark-worker' -m 1 | awk '{print $1}')"
+    container="$(docker ps -a | ggrep 'spark-worker' -m 1 | awk '{print $1}')"
     while [ -n "${container}" ];
     do
       docker stop "${container}"
       docker rm "${container}"
-      container="$(docker ps -a | grep 'spark-worker' -m 1 | awk '{print $1}')"
+      container="$(docker ps -a | ggrep 'spark-worker' -m 1 | awk '{print $1}')"
     done
 
-    container="$(docker ps -a | grep 'spark-master' | awk '{print $1}')"
+    container="$(docker ps -a | ggrep 'spark-master' | awk '{print $1}')"
     docker stop "${container}"
     docker rm "${container}"
 
-    container="$(docker ps -a | grep 'spark-base' | awk '{print $1}')"
+    container="$(docker ps -a | ggrep 'spark-base' | awk '{print $1}')"
     docker stop "${container}"
     docker rm "${container}"
 
-    container="$(docker ps -a | grep 'base' | awk '{print $1}')"
+    container="$(docker ps -a | ggrep 'base' | awk '{print $1}')"
     docker stop "${container}"
     docker rm "${container}"
 
@@ -67,19 +67,19 @@ function cleanImages() {
 
     if [[ "${SHOULD_BUILD_JUPYTERLAB}" == "true" ]]
     then
-      docker rmi -f "$(docker images | grep -m 1 'jupyterlab' | awk '{print $3}')"
+      docker rmi -f "$(docker images | ggrep -m 1 'jupyterlab' | awk '{print $3}')"
     fi
 
     if [[ "${SHOULD_BUILD_SPARK}" == "true" ]]
     then
-      docker rmi -f "$(docker images | grep -m 1 'spark-worker' | awk '{print $3}')"
-      docker rmi -f "$(docker images | grep -m 1 'spark-master' | awk '{print $3}')"
-      docker rmi -f "$(docker images | grep -m 1 'spark-base' | awk '{print $3}')"
+      docker rmi -f "$(docker images | ggrep -m 1 'spark-worker' | awk '{print $3}')"
+      docker rmi -f "$(docker images | ggrep -m 1 'spark-master' | awk '{print $3}')"
+      docker rmi -f "$(docker images | ggrep -m 1 'spark-base' | awk '{print $3}')"
     fi
 
     if [[ "${SHOULD_BUILD_BASE}" == "true" ]]
     then
-      docker rmi -f "$(docker images | grep -m 1 'base' | awk '{print $3}')"
+      docker rmi -f "$(docker images | ggrep -m 1 'base' | awk '{print $3}')"
     fi
 
 }
