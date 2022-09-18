@@ -142,6 +142,6 @@ function buildImages() {
 # ----------------------------------------------------------------------------------------------------------------------
 
 cleanContainers;
-cleanImages;
+# cleanImages;
 cleanVolume;
 buildImages;
