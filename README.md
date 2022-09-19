@@ -1,4 +1,6 @@
-# Apache Spark Standalone Cluster on Docker
+# Apache Spark Practice 
+
+This repository is based on the Standalone Cluster on Docker and the Material Developed by the Data System Group from Tartu University.
 
 > The project was featured on an **[article](https://www.mongodb.com/blog/post/getting-started-with-mongodb-pyspark-and-jupyter-notebook)** at **MongoDB** official tech blog! :scream:
 
@@ -7,6 +9,8 @@
 ## Introduction
 
 This project gives you an **Apache Spark** cluster in standalone mode with a **JupyterLab** interface built on top of **Docker**.
+It also includes an second version which mounts an HDFS cluster and allows testing parallel data processing.
+
 Learn Apache Spark through its **Scala**, **Python** (PySpark) and **R** (SparkR) API by running the Jupyter [notebooks](build/workspace/) with examples on how to read, process and write data.
 
 <p align="center"><img src="docs/image/cluster-architecture.png"></p>
