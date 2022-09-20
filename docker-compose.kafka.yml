@@ -127,7 +127,7 @@ services:
       - 4040:4040
     volumes:
       - shared-workspace:/opt/workspace
-      - ./:/opt/workspace
+      - ./local:/opt/workspace/local/
   spark-master:
     image: spark-master:3.0.0
     container_name: spark-master

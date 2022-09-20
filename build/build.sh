@@ -8,6 +8,8 @@
 
 BUILD_DATE="$(date -u +'%Y-%m-%d')"
 
+
+
 SHOULD_BUILD_BASE="$(ggrep -m 1 build_base build.yml | ggrep -o -P '(?<=").*(?=")')"
 SHOULD_BUILD_SPARK="$(ggrep -m 1 build_spark build.yml | ggrep -o -P '(?<=").*(?=")')"
 SHOULD_BUILD_JUPYTERLAB="$(ggrep -m 1 build_jupyter build.yml | ggrep -o -P '(?<=").*(?=")')"
@@ -141,6 +143,7 @@ function buildImages() {
 # -- Main --------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 
+# unzip workspace/data.zip -d workspace
 cleanContainers;
 # cleanImages;
 cleanVolume;
