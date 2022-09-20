@@ -1,6 +1,6 @@
 # Apache Spark Practice 
 
-This repository is based on the Standalone Cluster on Docker and the Material Developed by the Data System Group from Tartu University.
+This repository is based on the [Standalone Cluster on Docker](https://github.com/cluster-apps-on-docker/spark-standalone-cluster-on-docker) and the Material Developed by the Data System Group from Tartu University.
 
 > The project was featured on an **[article](https://www.mongodb.com/blog/post/getting-started-with-mongodb-pyspark-and-jupyter-notebook)** at **MongoDB** official tech blog! :scream:
 
