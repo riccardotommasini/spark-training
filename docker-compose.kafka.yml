@@ -7,37 +7,118 @@ volumes:
   shared-workspace:
     name: "hadoop-distributed-file-system"
     driver: local
-  hadoop_namenode:
-  hadoop_datanode:
-  hadoop_historyserver:
 services:
-  namenode:
-    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
-    container_name: namenode
+  zookeeper:
+    hostname: zookeeper
+    container_name: zookeeper
+    image: "${REPOSITORY}/cp-zookeeper:${CONFLUENT_DOCKER_TAG}"
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka1:
+    image: "${REPOSITORY}/cp-enterprise-kafka:${CONFLUENT_DOCKER_TAG}"
+    restart: always
+    hostname: kafka
+    container_name: kafka1
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_METRIC_REPORTERS: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: "kafka1:9092"
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+  
+  kafka2:
+    image: "${REPOSITORY}/cp-enterprise-kafka:${CONFLUENT_DOCKER_TAG}"
+    restart: always
+    hostname: kafka
+    container_name: kafka2
+    ports:
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9093
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_METRIC_REPORTERS: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: "kafka2:9093"
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+  schema-registry:
+    hostname: schema-registry
+    container_name: schema-registry
+    image: "${REPOSITORY}/cp-schema-registry:${CONFLUENT_DOCKER_TAG}"
     restart: always
     ports:
-      - 9870:9870
-      - 9010:9000
-    volumes:
-      - hadoop_namenode:/hadoop/dfs/name
+      - 8084:8081
     environment:
-      - CLUSTER_NAME=test
-      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
-    env_file:
-      - ./hadoop.env
-  datanode:
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
-    container_name: datanode
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka1:9092
+      SCHEMA_REGISTRY_LISTENERS: http://schema-registry:8081
+  
+  tools:
+    image: cnfltraining/training-tools:6.0
     restart: always
+    hostname: tools
+    container_name: tools
     volumes:
-      - hadoop_datanode:/hadoop/dfs/data
+      - .:/root/confluent-streams/labs/using-ksql
+    working_dir: /root/confluent-streams/labs/using-ksql
+    command: /bin/bash
+    tty: true
+
+
+  ksqldb-server:
+    container_name: ksqldb-server
+    image: ${REPOSITORY}/ksqldb-server
+    ports: 
+      - 8088:8088
+      - 8083:8083
+    depends_on:
+      - kafka1
+      - kafka2
+      - schema-registry
     environment:
-      SERVICE_PRECONDITION: "namenode:9870"
-      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
-    ports:
-      - "9864:9864"
-    env_file:
-      - ./hadoop.env
+      KSQL_BOOTSTRAP_SERVERS: kafka1:9092
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KSQL_AUTO_OFFSET_RESET: "earliest"
+      KSQL_COMMIT_INTERVAL_MS: 2000
+      KSQL_KSQL_HIDDEN_TOPICS: '^_.*'        
+    # If you want to use the Confluent Hub installer to d/l component, but make them available
+    # when running this offline, spin up the stack once and then run : 
+    #   docker cp ksqldb:/usr/share/confluent-hub-components ./data/connect-jars
+    volumes:
+      - $PWD/data:/data
+      - $PWD/scripts:/scripts
+      - $PWD/extensions:/extensions
+      - $PWD/extensions:/usr/ext
+
+  ksqldb-cli:
+    container_name: ksqldb-cli
+    image: ${REPOSITORY}/cp-ksqldb-cli:${CONFLUENT_DOCKER_TAG}
+    depends_on:
+      - ksqldb-server
+    entrypoint: /bin/sh
+    tty: true
+    volumes:
+      - $PWD/scripts:/scripts
+
   jupyterlab:
     image: jupyterlab:3.0.0-spark-3.0.0
     container_name: jupyterlab
@@ -46,6 +127,7 @@ services:
       - 4040:4040
     volumes:
       - shared-workspace:/opt/workspace
+      - ./:/opt/workspace
   spark-master:
     image: spark-master:3.0.0
     container_name: spark-master
