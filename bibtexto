@@ -1,0 +1,43 @@
+from pybtex.database import parse_string
+
+# Define the BibTeX entries as a string
+bibtex_entries = """
+... (your BibTeX entries here) ...
+"""
+
+# Parse the BibTeX entries
+bib_database = parse_string(bibtex_entries, "bibtex")
+
+# Extract and format the publication details
+publications = []
+for key, entry in bib_database.entries.items():
+    authors = entry.persons['author']
+    formatted_authors = ", ".join(
+        f"{' '.join(person.first_names)} {' '.join(person.last_names)}"
+        for person in authors
+    )
+    title = entry.fields.get('title', 'No Title')
+    year = int(entry.fields.get('year', 0))
+    venue = entry.fields.get('booktitle', entry.fields.get('journal', 'Unknown Venue'))
+    pages = entry.fields.get('pages', 'No Pages')
+    
+    publications.append({
+        "year": year,
+        "authors": formatted_authors,
+        "title": title,
+        "venue": venue,
+        "pages": pages,
+    })
+
+# Sort publications by year, starting with the most recent
+publications_sorted = sorted(publications, key=lambda x: x['year'], reverse=True)
+
+# Format the output as a list of publication entries
+formatted_publications = [
+    f"{pub['authors']} ({pub['year']}). {pub['title']}. *{pub['venue']}*, {pub['pages']}."
+    for pub in publications_sorted
+]
+
+# Print the formatted publications
+for publication in formatted_publications:
+    print(publication)
